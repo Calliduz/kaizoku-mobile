@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Dimensions,
   ImageBackground,
+  FlatList,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -31,116 +32,120 @@ const { width: SCREEN_W } = Dimensions.get('window');
 function SpotlightCarousel({ items }: { items: Anime[] }) {
   const router = useRouter();
   const [idx, setIdx] = useState(0);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    if (items.length === 0) return;
-    timer.current = setInterval(() => {
-      setIdx((i) => (i + 1) % items.length);
-    }, 6000);
-    return () => {
-      if (timer.current) clearInterval(timer.current);
-    };
-  }, [items.length]);
+  const onViewRef = useRef((info: any) => {
+    if (info.viewableItems.length > 0) {
+      setIdx(info.viewableItems[0].index);
+    }
+  });
+  const viewConfigRef = useRef({ viewAreaCoveragePercentThreshold: 50 });
 
   if (items.length === 0) return null;
-  const current = items[idx];
-  if (!current) return null;
-
-  const bgImage = current.fanartBackground || current.bannerImage || current.coverImage;
 
   return (
-    <View style={styles.carouselContainer}>
-      <ImageBackground
-        source={{ uri: bgImage }}
-        style={styles.carouselBg}
-        imageStyle={{ opacity: 0.55 }}
-      >
-        <LinearGradient
-          colors={[
-            'transparent',
-            'rgba(5,7,10,0.6)',
-            Colors.bgPrimary,
-          ]}
-          style={StyleSheet.absoluteFill}
-        />
-        <LinearGradient
-          colors={['rgba(5,7,10,0.3)', 'transparent']}
-          style={styles.carouselTopGrad}
-        />
-
-        <View style={styles.carouselContent}>
-          {/* Cover image + Info */}
-          <View style={styles.carouselBody}>
-            <Image
-              source={{ uri: current.coverImage }}
-              style={[styles.carouselPoster, { borderRadius: Radius.md }]}
-              contentFit="cover"
-            />
-            <View style={styles.carouselInfo}>
-              <Text style={styles.carouselTitle} numberOfLines={2}>
-                {current.title}
-              </Text>
-
-              {/* Metadata chips */}
-              <View style={styles.chipRow}>
-                {current.rating > 0 && (
-                  <View style={styles.chipGold}>
-                    <Text style={styles.chipGoldText}>
-                      ★ {(current.rating / 10).toFixed(1)}
-                    </Text>
-                  </View>
-                )}
-                {current.format && (
-                  <View style={styles.chip}>
-                    <Text style={styles.chipText}>
-                      {current.format.replace(/_/g, ' ')}
-                    </Text>
-                  </View>
-                )}
-                {current.status === 'RELEASING' && (
-                  <View style={[styles.chip, styles.chipGreen]}>
-                    <Text style={styles.chipText}>ON AIR</Text>
-                  </View>
-                )}
-              </View>
-
-              <Text style={styles.carouselDesc} numberOfLines={3}>
-                {current.description?.replace(/<[^>]*>/g, '')}
-              </Text>
-
-              {/* Actions */}
-              <View style={styles.carouselActions}>
-                <TouchableOpacity
-                  style={styles.btnWatch}
-                  onPress={() => router.push(`/anime/${current._id}/watch/first` as any)}
-                  activeOpacity={0.8}
+    <View>
+      <FlatList
+        data={items}
+        keyExtractor={(item) => item._id}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={SCREEN_W}
+        snapToAlignment="center"
+        decelerationRate="fast"
+        disableIntervalMomentum={true}
+        onViewableItemsChanged={onViewRef.current}
+        viewabilityConfig={viewConfigRef.current}
+        renderItem={({ item: current }) => {
+          const bgImage = current.fanartBackground || current.bannerImage || current.coverImage;
+          return (
+            <View style={{ width: SCREEN_W, height: 280 }}>
+              <ImageBackground
+                source={{ uri: bgImage }}
+                style={styles.carouselBg}
+                imageStyle={{ opacity: 0.55 }}
+              >
+                {/* Full overlay gradient */}
+                <LinearGradient
+                  colors={['transparent', 'rgba(5,7,10,0.6)', Colors.bgPrimary]}
+                  style={StyleSheet.absoluteFill}
+                />
+                {/* Top dark fade */}
+                <LinearGradient
+                  colors={['rgba(5,7,10,0.3)', 'transparent']}
+                  style={styles.carouselTopGrad}
+                />
+                {/* Content gradient at bottom */}
+                <LinearGradient
+                  colors={['transparent', '#0f172a']}
+                  style={styles.carouselContent}
                 >
-                  <Text style={styles.btnWatchText}>▶  Watch Now</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.btnInfo}
-                  onPress={() => router.push(`/anime/${current._id}`)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.btnInfoText}>ⓘ  Details</Text>
-                </TouchableOpacity>
-              </View>
+                  <View style={styles.carouselBody}>
+                    <Image
+                      source={{ uri: current.coverImage }}
+                      style={[styles.carouselPoster, { borderRadius: Radius.md }]}
+                      contentFit="cover"
+                    />
+                    <View style={styles.carouselInfo}>
+                      <Text style={styles.carouselTitle} numberOfLines={2}>
+                        {current.title}
+                      </Text>
+
+                      <View style={styles.chipRow}>
+                        {current.rating > 0 && (
+                          <View style={styles.chipGold}>
+                            <Text style={styles.chipGoldText}>
+                              ★ {(current.rating / 10).toFixed(1)}
+                            </Text>
+                          </View>
+                        )}
+                        {current.format && (
+                          <View style={styles.chip}>
+                            <Text style={styles.chipText}>
+                              {current.format.replace(/_/g, ' ')}
+                            </Text>
+                          </View>
+                        )}
+                        {current.status === 'RELEASING' && (
+                          <View style={[styles.chip, styles.chipGreen]}>
+                            <Text style={styles.chipText}>ON AIR</Text>
+                          </View>
+                        )}
+                      </View>
+
+                      <Text style={styles.carouselDesc} numberOfLines={3}>
+                        {current.description?.replace(/<[^>]*>/g, '')}
+                      </Text>
+
+                      <View style={styles.carouselActions}>
+                        <TouchableOpacity
+                          style={styles.btnWatch}
+                          onPress={() => router.push(`/anime/${current._id}/watch/first` as any)}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.btnWatchText}>▶  Watch Now</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.btnInfo}
+                          onPress={() => router.push(`/anime/${current._id}`)}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.btnInfoText}>ⓘ  Details</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </LinearGradient>
+              </ImageBackground>
             </View>
-          </View>
-
-          {/* Dots */}
-          <View style={styles.dots}>
-            {items.map((_, i) => (
-              <TouchableOpacity
-                key={i}
-                style={[styles.dot, i === idx && styles.dotActive]}
-                onPress={() => setIdx(i)}
-              />
-            ))}
-          </View>
-        </View>
-      </ImageBackground>
+          );
+        }}
+      />
+      {/* Pagination dots — below the swiper, never over buttons */}
+      <View style={styles.dots}>
+        {items.map((_, i) => (
+          <View key={i} style={[styles.dot, i === idx && styles.dotActive]} />
+        ))}
+      </View>
     </View>
   );
 }
@@ -333,6 +338,7 @@ const styles = StyleSheet.create({
   },
   carouselContent: {
     padding: Spacing.md,
+    paddingBottom: 40,
   },
   carouselBody: {
     flexDirection: 'row',
@@ -424,7 +430,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 5,
-    marginTop: Spacing.sm,
+    marginTop: 20,
   },
   dot: {
     width: 6,

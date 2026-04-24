@@ -112,6 +112,7 @@ export default function SearchScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.chips}
+        style={{ marginBottom: 20 }}
       >
         {SORT_OPTIONS.map((opt) => (
           <TouchableOpacity
@@ -141,7 +142,7 @@ export default function SearchScreen() {
       {loading ? (
         <View style={styles.skeletonGrid}>
           {Array.from({ length: 6 }).map((_, i) => (
-            <AnimeCardSkeleton key={i} />
+            <AnimeCardSkeleton key={i} width={170} />
           ))}
         </View>
       ) : (
@@ -164,7 +165,7 @@ export default function SearchScreen() {
           }
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="search-outline" size={64} color="#64748b" />
+              <Ionicons name="search-outline" size={64} color="#64748b" style={{ marginBottom: 16 }} />
               <Text style={styles.emptyText}>No results found</Text>
             </View>
           }
@@ -207,11 +208,11 @@ const styles = StyleSheet.create({
   chips: {
     paddingHorizontal: 16,
     paddingBottom: Spacing.sm,
-    gap: 12,
+    gap: 10,
     alignItems: 'center',
   },
   chip: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 999,
     backgroundColor: Colors.bgCard,
@@ -234,7 +235,8 @@ const styles = StyleSheet.create({
   },
   grid: {
     paddingHorizontal: Spacing.md,
-    paddingBottom: 90,
+    paddingBottom: 100,
+    flexGrow: 1,
   },
   gridRow: {
     justifyContent: 'space-between',
@@ -244,18 +246,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: Spacing.md,
-    gap: Spacing.md,
+    justifyContent: 'space-between',
   },
   empty: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing['3xl'],
-    gap: 16,
-    marginTop: 40,
   },
   emptyText: {
     fontSize: Typography.base,
-    color: Colors.textMuted,
+    color: '#94a3b8',
   },
 });

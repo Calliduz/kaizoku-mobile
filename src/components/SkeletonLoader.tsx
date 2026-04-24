@@ -46,10 +46,10 @@ export function Skeleton({ width = '100%', height, borderRadius, style }: Skelet
   );
 }
 
-export function AnimeCardSkeleton() {
+export function AnimeCardSkeleton({ width = 130 }: { width?: number }) {
   return (
-    <View style={styles.card}>
-      <Skeleton height={200} borderRadius={Radius.md} style={styles.image} />
+    <View style={[{ width, marginRight: width === 130 ? 12 : 0 }]}>
+      <Skeleton height={190} borderRadius={Radius.md} style={styles.image} />
       <Skeleton height={14} width="90%" style={styles.title} />
       <Skeleton height={11} width="60%" style={styles.meta} />
     </View>
@@ -82,10 +82,6 @@ export function EpisodeCardSkeleton() {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    width: 130,
-    marginRight: 12,
-  },
   image: {
     width: '100%',
   },
