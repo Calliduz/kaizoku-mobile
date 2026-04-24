@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   },
   playerLoadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(5,7,10,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,

@@ -95,16 +95,18 @@ export default function HistoryScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.content}>
-        <View style={styles.headerContainer}>
-          <Ionicons name="time" size={28} color={Colors.accent} />
-          <Text style={styles.headerText}>Watch History</Text>
-        </View>
+        <View style={styles.headerRow}>
+          <View style={styles.headerTitleContainer}>
+            <Ionicons name="time" size={28} color={Colors.accent} />
+            <Text style={styles.headerText}>Watch History</Text>
+          </View>
 
-        {items.length > 0 && (
-          <TouchableOpacity onPress={handleClearAll} style={{ marginBottom: 16 }}>
-            <Text style={styles.clearBtn}>Clear All</Text>
-          </TouchableOpacity>
-        )}
+          {items.length > 0 && (
+            <TouchableOpacity onPress={handleClearAll}>
+              <Text style={styles.clearBtn}>Clear All</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {items.length === 0 ? (
@@ -145,13 +147,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
   },
-  headerContainer: {
+  headerRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingBottom: 16,
     marginBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#11151c',
+  },
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   headerText: {
     fontSize: 32,

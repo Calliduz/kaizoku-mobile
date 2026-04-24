@@ -36,7 +36,7 @@ export default function AnimeCard({ anime, isExternal = false, width = 130 }: An
   return (
     <AnimatedTouchableOpacity
       entering={FadeIn.duration(400)}
-      style={[styles.wrapper, { width }]}
+      style={[{ width, marginRight: width === 130 ? Spacing.sm + 4 : 0 }]}
       onPress={handlePress}
       activeOpacity={0.7}
     >
@@ -90,9 +90,7 @@ export default function AnimeCard({ anime, isExternal = false, width = 130 }: An
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    marginRight: Spacing.sm + 4,
-  },
+
   imageWrapper: {
     height: 190,
     borderRadius: Radius.md,

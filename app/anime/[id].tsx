@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.md,
     fontWeight: Typography.bold,
     color: Colors.textPrimary,
-    marginBottom: Spacing.sm,
+    marginBottom: 16,
   },
   desc: {
     fontSize: Typography.sm,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   genreRow: {
     paddingHorizontal: Spacing.md,
     gap: 6,
-    marginTop: Spacing.md,
+    marginTop: 12,
   },
   genreChip: {
     paddingHorizontal: Spacing.sm + 4,
@@ -456,11 +456,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: Spacing.md,
-    marginTop: Spacing.md,
+    marginTop: 16,
     gap: Spacing.md,
   },
   infoItem: {
-    gap: 2,
+    gap: 4,
   },
   infoLabel: {
     fontSize: Typography.xs,
