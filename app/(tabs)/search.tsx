@@ -181,7 +181,8 @@ const styles = StyleSheet.create({
   },
   searchWrapper: {
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingTop: Spacing.sm,
+    marginBottom: 16,
   },
   searchBar: {
     flexDirection: 'row',
@@ -204,13 +205,12 @@ const styles = StyleSheet.create({
     }),
   },
   chips: {
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: 16,
     paddingBottom: Spacing.sm,
-    gap: Spacing.xs + 2,
+    gap: 12,
     alignItems: 'center',
   },
   chip: {
-    height: 36,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 999,

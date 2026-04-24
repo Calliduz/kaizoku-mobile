@@ -13,11 +13,9 @@ import { Text } from 'react-native';
 function TabBarIcon({
   name,
   focused,
-  label,
 }: {
   name: IconName;
   focused: boolean;
-  label: string;
 }) {
   const scale = useSharedValue(1);
 
@@ -45,12 +43,6 @@ function TabBarIcon({
           color={focused ? Colors.accent : '#64748b'}
         />
       </View>
-      <Text
-        style={[styles.tabLabel, { color: focused ? Colors.accent : '#64748b' }]}
-        numberOfLines={1}
-      >
-        {label}
-      </Text>
     </Animated.View>
   );
 }
@@ -61,21 +53,11 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarBackground: () => (
-          Platform.OS === 'ios' ? (
-            <BlurView
-              intensity={80}
-              tint="dark"
-              style={StyleSheet.absoluteFill}
-            />
-          ) : (
-            <View style={[StyleSheet.absoluteFill, styles.tabBarAndroid]} />
-          )
-        ),
         tabBarActiveTintColor: Colors.accent,
         tabBarInactiveTintColor: '#64748b',
-        tabBarShowLabel: false,
-        tabBarItemStyle: { justifyContent: 'center' },
+        tabBarShowLabel: true,
+        tabBarLabelStyle: { fontSize: 10 },
+        tabBarItemStyle: { padding: 0, margin: 0 },
       }}
     >
       <Tabs.Screen
@@ -83,8 +65,9 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} focused={focused} label="Home" />
+            <TabBarIcon name={focused ? 'home' : 'home-outline'} focused={focused} />
           ),
+          tabBarLabel: ({ focused, color }) => <Text style={{ color, fontSize: 10, width: 100, textAlign: 'center', fontWeight: '600' }}>Home</Text>,
         }}
       />
       <Tabs.Screen
@@ -92,8 +75,9 @@ export default function TabLayout() {
         options={{
           title: 'Browse',
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon name={focused ? 'search' : 'search-outline'} focused={focused} label="Browse" />
+            <TabBarIcon name={focused ? 'search' : 'search-outline'} focused={focused} />
           ),
+          tabBarLabel: ({ focused, color }) => <Text style={{ color, fontSize: 10, width: 100, textAlign: 'center', fontWeight: '600' }}>Browse</Text>,
         }}
       />
       <Tabs.Screen
@@ -101,8 +85,9 @@ export default function TabLayout() {
         options={{
           title: 'History',
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon name={focused ? 'time' : 'time-outline'} focused={focused} label="History" />
+            <TabBarIcon name={focused ? 'time' : 'time-outline'} focused={focused} />
           ),
+          tabBarLabel: ({ focused, color }) => <Text style={{ color, fontSize: 10, width: 100, textAlign: 'center', fontWeight: '600' }}>History</Text>,
         }}
       />
     </Tabs>
@@ -111,30 +96,19 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    position: 'absolute',
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopWidth: 0,
     height: Platform.OS === 'android' ? 70 : 65,
     paddingTop: 8,
     paddingBottom: 8,
-    backgroundColor: 'transparent',
+    backgroundColor: '#11151c',
     elevation: 0,
-  },
-  tabBarAndroid: {
-    backgroundColor: 'rgba(11, 14, 20, 0.97)',
-  },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-    marginTop: 4,
   },
   tabContainer: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconContainer: {
-    width: 48,
+    width: 44,
     height: 28,
     borderRadius: 14,
     alignItems: 'center',
