@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Platform,
   Dimensions,
-} from 'react-native';
+} from "react-native";
 import Video, {
   VideoRef,
   OnProgressData,
@@ -15,13 +15,15 @@ import Video, {
   OnVideoErrorData,
   SelectedVideoTrack,
   SelectedVideoTrackType,
-} from 'react-native-video';
-import Slider from '@react-native-community/slider';
-import * as ScreenOrientation from 'expo-screen-orientation';
-import { Ionicons } from '@expo/vector-icons';
-import type { StreamingSource } from '@/types';
-import { API_URL } from '@/api/client';
-import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
+} from "react-native-video";
+import Slider from "@react-native-community/slider";
+import * as ScreenOrientation from "expo-screen-orientation";
+import * as Linking from "expo-linking";
+import { WebView } from "react-native-webview";
+import { Ionicons } from "@expo/vector-icons";
+import type { StreamingSource } from "@/types";
+import { API_URL } from "@/api/client";
+import { Colors, Radius, Spacing, Typography } from "@/constants/theme";
 
 interface KaizokuPlayerProps {
   source: StreamingSource;
@@ -38,16 +40,30 @@ interface KaizokuPlayerProps {
  * Mobile uses native HTTP — no CORS issues. We still go through the proxy
  * so the backend can handle Referer spoofing and segment rewriting.
  */
-function buildProxyUrl(url: string, referer?: string): string {
-  const base = API_URL.replace('/api', ''); // e.g. https://api.kaizoku.clev.studio
-  const ref = referer || 'https://kwik.si/';
-  return `${base}/api/scraper/proxy?url=${encodeURIComponent(url)}&referer=${encodeURIComponent(ref)}`;
+function getStreamUrl(
+  url: string | undefined,
+  referer: string | undefined,
+  isWeb: boolean,
+): string {
+  if (!url) return "";
+  const base = API_URL.endsWith("/api") ? API_URL.slice(0, -4) : API_URL;
+
+  if (url.startsWith("/api/")) {
+    return `${base}${url}`;
+  }
+
+  if (isWeb) {
+    const ref = referer || "https://kwik.cx/";
+    return `${base}/api/scraper/proxy?url=${encodeURIComponent(url)}&referer=${encodeURIComponent(ref)}`;
+  }
+
+  return url;
 }
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 export default function KaizokuPlayer({
@@ -68,8 +84,34 @@ export default function KaizokuPlayer({
   const [muted, setMuted] = useState(false);
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Build the proxied HLS URL
-  const proxyUrl = buildProxyUrl(source.url, source.referer || source.headers?.Referer);
+  const isWeb = Platform.OS === "web";
+  const streamUrl = getStreamUrl(
+    source?.url,
+    source?.referer || source?.headers?.Referer,
+    isWeb,
+  );
+
+  const videoSource = {
+    uri: streamUrl,
+    ...(source?.type === "hls" ? { type: "m3u8" } : {}),
+    ...(!isWeb && source?.url && !source.url.startsWith("/api/")
+      ? {
+          headers: {
+            Referer:
+              source.referer ||
+              source.headers?.Referer ||
+              (source?.server?.toLowerCase().includes("kwik")
+                ? "https://kwik.cx/"
+                : "https://kwik.si/"),
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+          },
+        }
+      : {}),
+  };
+
+  console.log("[KaizokuPlayer] Original Source:", source);
+  console.log("[KaizokuPlayer] VideoSource sent to ExoPlayer:", videoSource);
 
   const resetControlsTimer = useCallback(() => {
     if (controlsTimer.current) clearTimeout(controlsTimer.current);
@@ -100,34 +142,48 @@ export default function KaizokuPlayer({
     [duration, onProgress],
   );
 
-  const handleLoad = useCallback((data: OnLoadData) => {
-    setDuration(data.duration);
-    setBuffering(false);
-    // Seek to saved position
-    if (startPositionMs > 0) {
-      videoRef.current?.seek(startPositionMs / 1000);
-    }
-  }, [startPositionMs]);
+  const handleLoad = useCallback(
+    (data: OnLoadData) => {
+      setDuration(data.duration);
+      setBuffering(false);
+      // Seek to saved position
+      if (startPositionMs > 0) {
+        videoRef.current?.seek(startPositionMs / 1000);
+      }
+    },
+    [startPositionMs],
+  );
 
-  const handleBuffer = useCallback(({ isBuffering }: { isBuffering: boolean }) => {
-    setBuffering(isBuffering);
-  }, []);
+  const handleBuffer = useCallback(
+    ({ isBuffering }: { isBuffering: boolean }) => {
+      setBuffering(isBuffering);
+    },
+    [],
+  );
 
   const handleError = useCallback((e: OnVideoErrorData) => {
-    console.error('[KaizokuPlayer] Error:', e.error);
-    setError(`Playback failed: ${e.error?.localizedDescription || 'Unknown error'}`);
+    console.error("[KaizokuPlayer] Error:", e.error);
+    setError(
+      `Playback failed: ${e.error?.localizedDescription || "Unknown error"}`,
+    );
     setBuffering(false);
   }, []);
 
-  const handleSeek = useCallback((value: number) => {
-    videoRef.current?.seek(value);
-    resetControlsTimer();
-  }, [resetControlsTimer]);
+  const handleSeek = useCallback(
+    (value: number) => {
+      videoRef.current?.seek(value);
+      resetControlsTimer();
+    },
+    [resetControlsTimer],
+  );
 
-  const skip = useCallback((seconds: number) => {
-    videoRef.current?.seek(currentTime + seconds);
-    resetControlsTimer();
-  }, [currentTime, resetControlsTimer]);
+  const skip = useCallback(
+    (seconds: number) => {
+      videoRef.current?.seek(currentTime + seconds);
+      resetControlsTimer();
+    },
+    [currentTime, resetControlsTimer],
+  );
 
   const toggleFullscreen = useCallback(async () => {
     if (fullscreen) {
@@ -158,12 +214,27 @@ export default function KaizokuPlayer({
     );
   }
 
+  if (source?.type === "iframe" || source?.type === "embed") {
+    return (
+      <View style={styles.container}>
+        <WebView
+          source={{ uri: source.url }}
+          style={styles.webview}
+          allowsFullscreenVideo={true}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          mediaPlaybackRequiresUserAction={false}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {/* ─── Native Video ────────────────────────────────── */}
       <Video
         ref={videoRef}
-        source={{ uri: proxyUrl }}
+        source={videoSource}
         style={styles.video}
         resizeMode="contain"
         paused={paused}
@@ -212,7 +283,7 @@ export default function KaizokuPlayer({
                 onPress={togglePlayPause}
               >
                 <Ionicons
-                  name={paused ? 'play' : 'pause'}
+                  name={paused ? "play" : "pause"}
                   size={36}
                   color="#fff"
                 />
@@ -243,19 +314,25 @@ export default function KaizokuPlayer({
               <Text style={styles.timeText}>{formatTime(duration)}</Text>
 
               <TouchableOpacity
-                onPress={() => { setMuted((m) => !m); resetControlsTimer(); }}
+                onPress={() => {
+                  setMuted((m) => !m);
+                  resetControlsTimer();
+                }}
                 style={styles.iconBtn}
               >
                 <Ionicons
-                  name={muted ? 'volume-mute' : 'volume-high'}
+                  name={muted ? "volume-mute" : "volume-high"}
                   size={20}
                   color="#fff"
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={toggleFullscreen} style={styles.iconBtn}>
+              <TouchableOpacity
+                onPress={toggleFullscreen}
+                style={styles.iconBtn}
+              >
                 <Ionicons
-                  name={fullscreen ? 'contract' : 'expand'}
+                  name={fullscreen ? "contract" : "expand"}
                   size={20}
                   color="#fff"
                 />
@@ -277,59 +354,63 @@ export default function KaizokuPlayer({
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 16 / 9,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     borderRadius: Radius.md,
-    overflow: 'hidden',
+    overflow: "hidden",
+  },
+  webview: {
+    flex: 1,
+    backgroundColor: "#000",
   },
   video: {
     ...StyleSheet.absoluteFillObject,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'space-between',
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "space-between",
   },
   titleBar: {
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.sm + 4,
     paddingBottom: Spacing.xs,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: "rgba(0,0,0,0.4)",
   },
   titleText: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: '#fff',
+    color: "#fff",
   },
   centerControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: Spacing.xl,
   },
   controlBtn: {
-    alignItems: 'center',
+    alignItems: "center",
     opacity: 0.9,
   },
   skipLabel: {
     fontSize: Typography.xs,
-    color: '#fff',
+    color: "#fff",
     marginTop: 2,
   },
   playPauseBtn: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(255,202,40,0.2)',
+    backgroundColor: "rgba(255,202,40,0.2)",
     borderWidth: 2,
     borderColor: Colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   bottomBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: Spacing.sm,
     paddingBottom: Spacing.sm,
     gap: Spacing.xs,
@@ -340,25 +421,25 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: Typography.xs,
-    color: 'rgba(255,255,255,0.8)',
+    color: "rgba(255,255,255,0.8)",
     minWidth: 36,
-    textAlign: 'center',
+    textAlign: "center",
   },
   iconBtn: {
     padding: 4,
   },
   bufferingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   errorContainer: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 16 / 9,
     backgroundColor: Colors.bgCard,
     borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: Spacing.sm,
     padding: Spacing.md,
   },
@@ -368,7 +449,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: Typography.sm,
     color: Colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   retryBtn: {
     paddingHorizontal: Spacing.lg,
@@ -380,6 +461,6 @@ const styles = StyleSheet.create({
   retryText: {
     fontSize: Typography.sm,
     fontWeight: Typography.bold,
-    color: '#000',
+    color: "#000",
   },
 });
