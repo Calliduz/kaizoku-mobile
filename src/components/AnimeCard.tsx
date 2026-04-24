@@ -53,7 +53,7 @@ export default function AnimeCard({ anime, isExternal = false, width = 130 }: An
           style={styles.gradient}
         />
 
-        {/* Badges */}
+        {/* Badges — horizontal row */}
         <View style={styles.badges}>
           {anime.rating > 0 && (
             <View style={styles.ratingBadge}>
@@ -109,10 +109,11 @@ const styles = StyleSheet.create({
   },
   badges: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    gap: 4,
-    alignItems: 'flex-end',
+    top: 8,
+    right: 8,
+    flexDirection: 'row',
+    gap: 5,
+    alignItems: 'center',
   },
   ratingBadge: {
     backgroundColor: 'rgba(255, 202, 40, 0.9)',

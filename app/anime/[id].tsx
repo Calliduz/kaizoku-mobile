@@ -3,6 +3,7 @@ import {
   View,
   Text,
   ScrollView,
+  FlatList,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
@@ -147,144 +148,151 @@ export default function AnimeDetailsScreen() {
       </View>
 
       {/* ── Content ──────────────────────────────────────── */}
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={[]}
-      >
-        {/* Top info row */}
-        <View style={styles.topInfo}>
-          <Image
-            source={{ uri: anime.coverImage }}
-            style={[styles.poster, { borderRadius: Radius.md }]}
-            contentFit="cover"
-          />
-          <View style={styles.meta}>
-            <Text style={styles.title}>{anime.title}</Text>
+      {/* ── Content (Root FlatList for virtualization) ─────────────────── */}
+      <FlatList
+        data={episodes}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item: ep }) => (
+          <View style={styles.section}>
+            <EpisodeCard
+              episode={ep}
+              fallbackImage={bgImage}
+              onPress={handleEpisodeSelect}
+            />
+          </View>
+        )}
+        ListHeaderComponent={
+          <>
+            {/* Top info row */}
+            <View style={styles.topInfo}>
+              <Image
+                source={{ uri: anime.coverImage }}
+                style={[styles.poster, { borderRadius: Radius.md }]}
+                contentFit="cover"
+              />
+              <View style={styles.meta}>
+                <Text style={styles.title}>{anime.title}</Text>
 
-            {/* Chips */}
-            <View style={styles.chips}>
-              {anime.rating > 0 && (
-                <View style={styles.chipGold}>
-                  <Text style={styles.chipGoldText}>★ {(anime.rating / 10).toFixed(1)}</Text>
+                {/* Chips */}
+                <View style={styles.chips}>
+                  {anime.rating > 0 && (
+                    <View style={styles.chipGold}>
+                      <Text style={styles.chipGoldText}>★ {(anime.rating / 10).toFixed(1)}</Text>
+                    </View>
+                  )}
+                  <View style={styles.chip}>
+                    <Text style={styles.chipText}>
+                      {anime.format?.replace(/_/g, ' ') || 'Unknown'}
+                    </Text>
+                  </View>
+                  <View style={[styles.chip, { borderColor: statusColor }]}>
+                    <Text style={[styles.chipText, { color: statusColor }]}>
+                      {anime.status}
+                    </Text>
+                  </View>
+                  {anime.seasonYear && (
+                    <View style={styles.chip}>
+                      <Text style={styles.chipText}>{anime.seasonYear}</Text>
+                    </View>
+                  )}
                 </View>
-              )}
-              <View style={styles.chip}>
-                <Text style={styles.chipText}>
-                  {anime.format?.replace(/_/g, ' ') || 'Unknown'}
+
+                <Text style={styles.episodes}>
+                  {episodes.length} Episodes
                 </Text>
-              </View>
-              <View style={[styles.chip, { borderColor: statusColor }]}>
-                <Text style={[styles.chipText, { color: statusColor }]}>
-                  {anime.status}
-                </Text>
-              </View>
-              {anime.seasonYear && (
-                <View style={styles.chip}>
-                  <Text style={styles.chipText}>{anime.seasonYear}</Text>
+
+                {/* Actions */}
+                <View style={styles.actions}>
+                  <TouchableOpacity
+                    style={[styles.watchBtn, episodes.length === 0 && styles.watchBtnDisabled]}
+                    onPress={handleWatchFirst}
+                    activeOpacity={0.8}
+                    disabled={episodes.length === 0}
+                  >
+                    <Text style={styles.watchBtnText}>▶  Watch Now</Text>
+                  </TouchableOpacity>
                 </View>
-              )}
+              </View>
             </View>
 
-            <Text style={styles.episodes}>
-              {episodes.length} Episodes
-            </Text>
-
-            {/* Actions */}
-            <View style={styles.actions}>
-              <TouchableOpacity
-                style={[styles.watchBtn, episodes.length === 0 && styles.watchBtnDisabled]}
-                onPress={handleWatchFirst}
-                activeOpacity={0.8}
-                disabled={episodes.length === 0}
-              >
-                <Text style={styles.watchBtnText}>▶  Watch Now</Text>
+            {/* Description */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Synopsis</Text>
+              <TouchableOpacity onPress={() => setExpandDesc((e) => !e)}>
+                <Text style={styles.desc} numberOfLines={expandDesc ? undefined : 4}>
+                  {cleanDesc}
+                </Text>
+                <Text style={styles.readMore}>
+                  {expandDesc ? 'Show less ▲' : 'Read more ▼'}
+                </Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
 
-        {/* Description */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Synopsis</Text>
-          <TouchableOpacity onPress={() => setExpandDesc((e) => !e)}>
-            <Text style={styles.desc} numberOfLines={expandDesc ? undefined : 4}>
-              {cleanDesc}
-            </Text>
-            <Text style={styles.readMore}>
-              {expandDesc ? 'Show less ▲' : 'Read more ▼'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            {/* Genres */}
+            {anime.genres?.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.genreRow}
+              >
+                {anime.genres.map((g) => (
+                  <View key={g} style={styles.genreChip}>
+                    <Text style={styles.genreText}>{g}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
 
-        {/* Genres */}
-        {anime.genres?.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.genreRow}
-          >
-            {anime.genres.map((g) => (
-              <View key={g} style={styles.genreChip}>
-                <Text style={styles.genreText}>{g}</Text>
+            {/* Studios + Info */}
+            <View style={styles.infoRow}>
+              {anime.studios?.[0] && (
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>Studio</Text>
+                  <Text style={styles.infoValue}>{anime.studios[0].name}</Text>
+                </View>
+              )}
+              {anime.season && (
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>Season</Text>
+                  <Text style={styles.infoValue}>
+                    {anime.season} {anime.seasonYear}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Source</Text>
+                <Text style={styles.infoValue}>{anime.scrapeSource || '—'}</Text>
               </View>
-            ))}
-          </ScrollView>
-        )}
-
-        {/* Studios + Info */}
-        <View style={styles.infoRow}>
-          {anime.studios?.[0] && (
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Studio</Text>
-              <Text style={styles.infoValue}>{anime.studios[0].name}</Text>
             </View>
-          )}
-          {anime.season && (
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Season</Text>
-              <Text style={styles.infoValue}>
-                {anime.season} {anime.seasonYear}
+
+            {/* Episodes Header */}
+            <View style={[styles.section, { marginBottom: 10 }]}>
+              <Text style={styles.sectionTitle}>
+                Episodes{' '}
+                <Text style={{ color: Colors.accent }}>({episodes.length})</Text>
               </Text>
-            </View>
-          )}
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Source</Text>
-            <Text style={styles.infoValue}>{anime.scrapeSource || '—'}</Text>
-          </View>
-        </View>
 
-        {/* Episodes */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            Episodes{' '}
-            <Text style={{ color: Colors.accent }}>({episodes.length})</Text>
-          </Text>
+              {isScraping && episodes.length === 0 && (
+                <View style={styles.scrapingBadge}>
+                  <ActivityIndicator size="small" color={Colors.accent} />
+                  <Text style={styles.scrapingText}>Discovering episodes...</Text>
+                </View>
+              )}
 
-          {isScraping && episodes.length === 0 && (
-            <View style={styles.scrapingBadge}>
-              <ActivityIndicator size="small" color={Colors.accent} />
-              <Text style={styles.scrapingText}>Discovering episodes...</Text>
-            </View>
-          )}
-
-          {episodes.length > 0
-            ? episodes.map((ep) => (
-                <EpisodeCard
-                  key={ep._id}
-                  episode={ep}
-                  fallbackImage={bgImage}
-                  onPress={handleEpisodeSelect}
-                />
-              ))
-            : !isScraping && (
+              {episodes.length === 0 && !isScraping && (
                 <Text style={styles.noEpisodes}>No episodes available yet.</Text>
               )}
-        </View>
-
-        <View style={{ height: 90 }} />
-      </ScrollView>
+            </View>
+          </>
+        }
+        ListFooterComponent={<View style={{ height: 100 }} />}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={true}
+        style={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      />
     </View>
   );
 }

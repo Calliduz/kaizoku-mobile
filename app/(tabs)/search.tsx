@@ -19,25 +19,13 @@ import type { Anime } from '@/types';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 
-const GENRES = [
-  'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy',
-  'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Slice of Life',
-  'Sports', 'Supernatural', 'Thriller',
-];
 
-const SORT_OPTIONS = [
-  { label: 'Newest', value: 'newest' },
-  { label: 'Trending', value: 'popularity' },
-  { label: 'Top Rated', value: 'rating' },
-];
 
 export default function SearchScreen() {
   const params = useLocalSearchParams<{ q?: string; sort?: string }>();
   const router = useRouter();
 
   const [query, setQuery] = useState(params.q || '');
-  const [genre, setGenre] = useState('');
-  const [sort, setSort] = useState(params.sort || 'newest');
   const [results, setResults] = useState<Anime[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -47,12 +35,12 @@ export default function SearchScreen() {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const search = useCallback(async (
-    q: string, g: string, s: string, p: number, append = false
+    q: string, p: number, append = false
   ) => {
     if (p === 1) setLoading(true);
     else setLoadingMore(true);
     try {
-      const res = await fetchAllAnime({ search: q, genre: g, sort: s, page: p, limit: 20 });
+      const res = await fetchAllAnime({ search: q, page: p, limit: 20 });
       const data: Anime[] = res.data || [];
       setResults((prev) => (append ? [...prev, ...data] : data));
       setTotalPages(res.pagination?.pages ?? 1);
@@ -69,18 +57,18 @@ export default function SearchScreen() {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
       setPage(1);
-      search(query, genre, sort, 1, false);
+      search(query, 1, false);
     }, 400);
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, [query, genre, sort]);
+  }, [query]);
 
   const loadMore = () => {
     if (loadingMore || page >= totalPages) return;
     const next = page + 1;
     setPage(next);
-    search(query, genre, sort, next, true);
+    search(query, next, true);
   };
 
   return (
@@ -107,36 +95,7 @@ export default function SearchScreen() {
         </View>
       </View>
 
-      {/* Sort chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chips}
-        style={{ marginBottom: 20 }}
-      >
-        {SORT_OPTIONS.map((opt) => (
-          <TouchableOpacity
-            key={opt.value}
-            style={[styles.chip, sort === opt.value && styles.chipActive]}
-            onPress={() => setSort(opt.value)}
-          >
-            <Text style={[styles.chipText, sort === opt.value && styles.chipActiveText]}>
-              {opt.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-        {GENRES.map((g) => (
-          <TouchableOpacity
-            key={g}
-            style={[styles.chip, genre === g && styles.chipActive]}
-            onPress={() => setGenre(genre === g ? '' : g)}
-          >
-            <Text style={[styles.chipText, genre === g && styles.chipActiveText]}>
-              {g}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+
 
       {/* Results grid */}
       {loading ? (
@@ -204,34 +163,6 @@ const styles = StyleSheet.create({
       },
       default: {},
     }),
-  },
-  chips: {
-    paddingHorizontal: 16,
-    paddingBottom: Spacing.sm,
-    gap: 10,
-    alignItems: 'center',
-  },
-  chip: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: Colors.bgCard,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chipActive: {
-    backgroundColor: Colors.accent,
-    borderColor: Colors.accent,
-  },
-  chipText: {
-    fontSize: Typography.sm,
-    color: Colors.textSecondary,
-    fontWeight: Typography.semibold,
-  },
-  chipActiveText: {
-    color: '#000',
   },
   grid: {
     paddingHorizontal: Spacing.md,

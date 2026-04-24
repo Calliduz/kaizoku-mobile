@@ -23,6 +23,10 @@
         "backgroundColor": "#05070a"
       },
       "package": "com.kaizoku.mobile",
+      "navigationBar": {
+        "backgroundColor": "#11151c",
+        "buttonStyle": "light"
+      },
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE"

@@ -35,11 +35,6 @@ export default function AnimeRow({
           <View style={styles.accentBar} />
           <Text style={styles.title}>{title}</Text>
         </View>
-        {onSeeAll && (
-          <TouchableOpacity onPress={onSeeAll}>
-            <Text style={styles.seeAll}>See All</Text>
-          </TouchableOpacity>
-        )}
       </View>
 
       {loading ? (

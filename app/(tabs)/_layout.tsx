@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useEffect } from 'react';
+import * as NavigationBar from 'expo-navigation-bar';
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, withSpring } from 'react-native-reanimated';
 import { Platform, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -48,6 +49,13 @@ function TabBarIcon({
 }
 
 export default function TabLayout() {
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      NavigationBar.setBackgroundColorAsync('#11151c');
+      NavigationBar.setButtonStyleAsync('light');
+    }
+  }, []);
+
   return (
     <Tabs
       screenOptions={{
@@ -56,8 +64,8 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors.accent,
         tabBarInactiveTintColor: '#64748b',
         tabBarShowLabel: true,
-        tabBarLabelStyle: { fontSize: 10 },
-        tabBarItemStyle: { padding: 0, margin: 0 },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+        tabBarItemStyle: { flex: 1, padding: 0, margin: 0 },
       }}
     >
       <Tabs.Screen
@@ -67,7 +75,7 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <TabBarIcon name={focused ? 'home' : 'home-outline'} focused={focused} />
           ),
-          tabBarLabel: ({ focused, color }) => <Text style={{ color, fontSize: 10, width: 100, textAlign: 'center', fontWeight: '600' }}>Home</Text>,
+          tabBarLabel: ({ color }) => <Text style={{ color, fontSize: 10, fontWeight: '600' }}>Home</Text>,
         }}
       />
       <Tabs.Screen
@@ -77,7 +85,7 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <TabBarIcon name={focused ? 'search' : 'search-outline'} focused={focused} />
           ),
-          tabBarLabel: ({ focused, color }) => <Text style={{ color, fontSize: 10, width: 100, textAlign: 'center', fontWeight: '600' }}>Browse</Text>,
+          tabBarLabel: ({ color }) => <Text style={{ color, fontSize: 10, fontWeight: '600' }}>Browse</Text>,
         }}
       />
       <Tabs.Screen
@@ -87,7 +95,7 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <TabBarIcon name={focused ? 'time' : 'time-outline'} focused={focused} />
           ),
-          tabBarLabel: ({ focused, color }) => <Text style={{ color, fontSize: 10, width: 100, textAlign: 'center', fontWeight: '600' }}>History</Text>,
+          tabBarLabel: ({ color }) => <Text style={{ color, fontSize: 10, fontWeight: '600' }}>History</Text>,
         }}
       />
     </Tabs>

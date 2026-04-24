@@ -3,6 +3,7 @@ import {
   View,
   Text,
   ScrollView,
+  FlatList,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
@@ -224,85 +225,96 @@ export default function PlayerScreen() {
 
       {/* ── Below Player ─────────────────────────────── */}
       <SafeAreaView style={styles.belowPlayer} edges={['bottom']}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Back + Server Selector bar */}
-          <View style={styles.controlBar}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-              <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
-            </TouchableOpacity>
-            <View style={styles.serverRow}>
-              {sources.length > 0 && (
-                <ServerSelector
-                  sources={sources}
-                  currentSource={currentSource}
-                  onSelect={setCurrentSource}
-                />
-              )}
-              <TouchableOpacity onPress={handleRefreshSources} style={styles.refreshBtn}>
-                <Ionicons name="refresh" size={18} color={Colors.textMuted} />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Episode info */}
-          <View style={styles.episodeInfo}>
-            <View style={styles.coverMeta}>
-              <Image
-                source={{ uri: anime.coverImage }}
-                style={[styles.miniCover, { borderRadius: Radius.sm }]}
-                contentFit="cover"
-              />
-              <View style={styles.metaText}>
-                {anime.logo ? (
-                  <Image
-                    source={{ uri: anime.logo }}
-                    style={styles.logo}
-                    contentFit="contain"
-                  />
-                ) : (
-                  <Text style={styles.animeTitle} numberOfLines={1}>
-                    {anime.title}
-                  </Text>
-                )}
-                <Text style={styles.epBadge}>
-                  {currentEpisode?.seasonNumber
-                    ? `Season ${currentEpisode.seasonNumber} · `
-                    : ''}
-                  Episode {currentEpisode?.number ?? '—'}
-                </Text>
-                {currentEpisode?.title && (
-                  <Text style={styles.epTitle} numberOfLines={1}>
-                    {currentEpisode.title}
-                  </Text>
-                )}
-              </View>
-            </View>
-            {currentEpisode?.description && (
-              <Text style={styles.epDesc} numberOfLines={3}>
-                {currentEpisode.description}
-              </Text>
-            )}
-          </View>
-
-          {/* Episode List */}
-          <View style={styles.episodeListSection}>
-            <Text style={styles.sectionTitle}>
-              Episodes <Text style={{ color: Colors.accent }}>({episodes.length})</Text>
-            </Text>
-            {episodes.map((ep) => (
+        <FlatList
+          data={episodes}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item: ep }) => (
+            <View style={styles.episodeListSection}>
               <EpisodeCard
-                key={ep._id}
                 episode={ep}
                 isActive={ep._id === currentEpisode?._id}
                 fallbackImage={anime.bannerImage || anime.coverImage}
                 onPress={handleEpisodeSelect}
                 variant="compact"
               />
-            ))}
-          </View>
+            </View>
+          )}
+          ListHeaderComponent={
+            <>
+              {/* Back + Server Selector bar */}
+              <View style={styles.controlBar}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                  <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
+                </TouchableOpacity>
+                <View style={styles.serverRow}>
+                  {sources.length > 0 && (
+                    <ServerSelector
+                      sources={sources}
+                      currentSource={currentSource}
+                      onSelect={setCurrentSource}
+                    />
+                  )}
+                  <TouchableOpacity onPress={handleRefreshSources} style={styles.refreshBtn}>
+                    <Ionicons name="refresh" size={18} color={Colors.textMuted} />
+                  </TouchableOpacity>
+                </View>
+              </View>
 
-          <View style={{ height: 40 }} />
-        </ScrollView>
+              {/* Episode info */}
+              <View style={styles.episodeInfo}>
+                <View style={styles.coverMeta}>
+                  <Image
+                    source={{ uri: anime.coverImage }}
+                    style={[styles.miniCover, { borderRadius: Radius.sm }]}
+                    contentFit="cover"
+                  />
+                  <View style={styles.metaText}>
+                    {anime.logo ? (
+                      <Image
+                        source={{ uri: anime.logo }}
+                        style={styles.logo}
+                        contentFit="contain"
+                      />
+                    ) : (
+                      <Text style={styles.animeTitle} numberOfLines={1}>
+                        {anime.title}
+                      </Text>
+                    )}
+                    <Text style={styles.epBadge}>
+                      {currentEpisode?.seasonNumber
+                        ? `Season ${currentEpisode.seasonNumber} · `
+                        : ''}
+                      Episode {currentEpisode?.number ?? '—'}
+                    </Text>
+                    {currentEpisode?.title && (
+                      <Text style={styles.epTitle} numberOfLines={1}>
+                        {currentEpisode.title}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+                {currentEpisode?.description && (
+                  <Text style={styles.epDesc} numberOfLines={3}>
+                    {currentEpisode.description}
+                  </Text>
+                )}
+              </View>
+
+              {/* Episode List Header */}
+              <View style={[styles.episodeListSection, { marginBottom: 10 }]}>
+                <Text style={styles.sectionTitle}>
+                  Episodes <Text style={{ color: Colors.accent }}>({episodes.length})</Text>
+                </Text>
+              </View>
+            </>
+          }
+          ListFooterComponent={<View style={{ height: 40 }} />}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={true}
+          showsVerticalScrollIndicator={false}
+        />
       </SafeAreaView>
     </View>
   );
