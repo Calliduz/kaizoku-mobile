@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
+import * as NavigationBar from 'expo-navigation-bar';
 import { useHistoryStore } from '@/store/useHistoryStore';
 import { Colors } from '@/constants/theme';
 
@@ -21,6 +22,14 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [isHydrated]);
+
+  useEffect(() => {
+    // Style the Android system navigation bar to match dark theme
+    if (Platform.OS === 'android') {
+      NavigationBar.setBackgroundColorAsync(Colors.bgCard); // #11151c
+      NavigationBar.setButtonStyleAsync('light');
+    }
+  }, []);
 
   return (
     <GestureHandlerRootView style={styles.root}>

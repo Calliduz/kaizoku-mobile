@@ -41,11 +41,14 @@ function TabBarIcon({
       <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
         <Ionicons
           name={name}
-          size={focused ? 26 : 24}
+          size={focused ? 24 : 22}
           color={focused ? Colors.accent : '#64748b'}
         />
       </View>
-      <Text style={[styles.tabLabel, { color: focused ? Colors.accent : '#64748b' }]}>
+      <Text
+        style={[styles.tabLabel, { color: focused ? Colors.accent : '#64748b' }]}
+        numberOfLines={1}
+      >
         {label}
       </Text>
     </Animated.View>
@@ -131,9 +134,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconContainer: {
-    width: 56,
-    height: 32,
-    borderRadius: 16,
+    width: 48,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
